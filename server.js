@@ -1,38 +1,46 @@
 const http = require('http');
 const redis = require('redis');
 const Router = require('router');
+const { promisify } = require('util');
+const fs = require('fs');
+const yaml = require('js-yaml');
 const jsonbody = require('./jsonbody.js');
-const { promisify } = require("util");
 
-const hostname = '127.0.0.1';
-const port = 3030;
+const config = yaml.load(fs.readFileSync('./config.yml', 'utf8'));
+
+const hostname = config.server_hostname;
+const port = config.server_port;
 const redisClient = redis.createClient();
 const predis = {
     'rpush': promisify(redisClient.rpush).bind(redisClient),
     'lpop': promisify(redisClient.lpop).bind(redisClient)
 }
 
-let router = Router();
+const router = Router();
 
-router.post('/publish', handlePublish);
-router.get('/consume', handleConsume);
+router.post('/publish/:queue', handlePublish);
+router.get('/consume/:queue', handleConsume);
 
 function handlePublish(req, res, fallback) {
     jsonbody(req).then(body => {
-        predis.rpush('base_queue', JSON.stringify(body)).then(() => {
-            sendJsonResponse(res, {'status': 'ok'});
-        });
+        let message = {
+            'timestamp': new Date(),
+            'payload': body.payload
+        }
+
+        return predis.rpush('queue_' + req.params.queue, JSON.stringify(message));
+    }).then(() => {
+        sendJsonResponse(res, {'status': 'ok'});
     }).catch(err => {
-        return fallback(err.message);
+        return fallback(err);
     });
 }
 
 function handleConsume(req, res, fallback) {
-    predis.lpop('base_queue').then(message => {
+    predis.lpop('queue_' + req.params.queue).then(message => {
         sendJsonResponse(res, message ? JSON.parse(message) : null);
     }).catch(err => {
-        console.log(err);
-        return fallback(err.message);
+        return fallback(err);
     });
 }
 
@@ -51,7 +59,7 @@ function fallback(req, res) {
             res.end(JSON.stringify({'status': 'invalid URL'}));
         } else {
             res.statusCode = 500;
-            res.end(JSON.stringify({'status': 'error', 'message': err}));
+            res.end(JSON.stringify({'status': 'error', 'message': err.message}));
         }
     }
 }

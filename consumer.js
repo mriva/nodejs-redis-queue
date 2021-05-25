@@ -3,7 +3,7 @@ const jsonbody = require('./jsonbody.js');
 
 let options = {
     host: 'localhost',
-    path: '/consume',
+    path: '/consume/payment',
     port: 3030,
     method: 'GET',
 };

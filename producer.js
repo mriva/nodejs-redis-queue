@@ -3,7 +3,7 @@ const responsebody = require('./jsonbody.js');
 
 let options = {
     host: 'localhost',
-    path: '/publish',
+    path: '/publish/payment',
     port: 3030,
     method: 'POST',
     headers: {
@@ -12,8 +12,6 @@ let options = {
 };
 
 let req = http.request(options, (res) => {
-    console.log(res.headers);
-    console.log(res.statusCode);
     responsebody(res).then((body) => {
         console.log(body);
     });
@@ -24,5 +22,7 @@ function getRandomInt(max) {
 }
 
 // req.write('a' + JSON.stringify({"command": "pay", "amount": getRandomInt(500000)}));
-req.write(JSON.stringify({"command": "pay", "amount": getRandomInt(500000)}));
+req.write(JSON.stringify({
+    'payload': {'command': 'pay', 'amount': getRandomInt(500000)}
+}));
 req.end();
