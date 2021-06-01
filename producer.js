@@ -1,5 +1,5 @@
 const http = require('http');
-const responsebody = require('./jsonbody.js');
+const responsebody = require('./lib/jsonbody.js');
 
 let options = {
     host: 'localhost',
