@@ -1,8 +1,10 @@
 const jsonbody = require('../lib/jsonbody.js');
 const predis = require('../lib/predis');
 
-exports.handlePublish = handlePublish;
-exports.handleConsume = handleConsume;
+module.exports = {
+    handlePublish,
+    handleConsume
+}
 
 function handlePublish(req, res, fallback) {
     jsonbody(req).then(body => {
