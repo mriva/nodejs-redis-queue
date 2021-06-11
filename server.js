@@ -1,14 +1,8 @@
 const http = require('http');
 const Router = require('router');
-const fs = require('fs');
-const yaml = require('js-yaml');
 const moment = require('moment');
 const { handlePublish, handleConsume } = require('./request/handlers');
-
-const config = yaml.load(fs.readFileSync('./config.yml', 'utf8'));
-
-const hostname = config.server_hostname;
-const port = config.server_port;
+const config = require('./config.js');
 
 const router = Router();
 
@@ -41,6 +35,6 @@ const server = http.createServer((req, res) => {
     logRequest(req, res);
 });
 
-server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+server.listen(config.server_port, config.server_hostname, () => {
+    console.log(`Server running at http://${config.server_hostname}:${config.server_port}/`);
 });

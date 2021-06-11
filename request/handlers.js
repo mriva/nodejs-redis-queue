@@ -1,5 +1,6 @@
 const jsonbody = require('../lib/jsonbody.js');
 const predis = require('../lib/predis');
+const config = require('../config.js');
 
 module.exports = {
     handlePublish,
@@ -13,8 +14,9 @@ function handlePublish(req, res, fallback) {
             'payload': body.payload
         }
 
-        return predis.rpush('queue_' + req.params.queue, JSON.stringify(message));
+        return predis.rpush(config.queue_prefix + req.params.queue, JSON.stringify(message));
     }).then(() => {
+        res.statusCode = 201;
         sendJsonResponse(res, {'status': 'ok'});
     }).catch(err => {
         return fallback(err);
@@ -22,7 +24,8 @@ function handlePublish(req, res, fallback) {
 }
 
 function handleConsume(req, res, fallback) {
-    predis.lpop('queue_' + req.params.queue).then(message => {
+    predis.lpop(config.queue_prefix + req.params.queue).then(message => {
+        res.statusCode = 200;
         sendJsonResponse(res, message ? JSON.parse(message) : null);
     }).catch(err => {
         return fallback(err);
@@ -30,7 +33,6 @@ function handleConsume(req, res, fallback) {
 }
 
 function sendJsonResponse(res, data) {
-    res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(data));
 }
